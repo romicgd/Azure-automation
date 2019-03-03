@@ -105,8 +105,8 @@ function Add-BackendToAppplicationGateway {
 
  .EXAMPLE
 $urlPathMap= @{}
-$gdrtest2ist=@{ certificatePath="C:\_roman\certs\azure.ontario.ca\self-signed\gdrtest2-ist-nobeginend.cer"; BackendFqdns="gdrtest2-ist.azure.ontario-cloud.ca"; Path="/two"}
-$gdrtest4ist=@{ certificatePath="C:\_roman\certs\azure.ontario.ca\self-signed\gdrtest4-ist-nobeginend.cer"; BackendFqdns="gdrtest4-ist.azure.ontario-cloud.ca"; Path="/four"}
+$gdrtest2ist=@{ certificatePath="....\gdrtest2.cer"; BackendFqdns="gdrtest2..."; Path="/two"}
+$gdrtest4ist=@{ certificatePath="...\gdrtest4.cer"; BackendFqdns="gdrtest4..."; Path="/four"}
 $urlPathMap.Add("gdrtest2ist", $gdrtest2ist)
 $urlPathMap.Add("gdrtest4ist", $gdrtest4ist)
 
