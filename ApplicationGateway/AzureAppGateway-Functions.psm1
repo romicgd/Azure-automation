@@ -201,7 +201,7 @@ function Set-ITSAzAppGatewayCertificates {
         $CertificateBase64 | Out-File -FilePath $CertificatePath
     }
     if (-not $CertificatePath) {
-        Write-ITSAzLog -Level "Error" -Message "Either CertificatePath needs to be provided, or -ResolveCertificate specified"
+        Write-Output "Either CertificatePath needs to be provided, or -ResolveCertificate specified"
         return
     }
 
@@ -213,7 +213,7 @@ function Set-ITSAzAppGatewayCertificates {
         $CertObj = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
         $CertObj.Import([Convert]::FromBase64String($agwCert.Data))
         if ($Certificate.Thumbprint -ieq $CertObj.Thumbprint) {
-            Write-ITSAzLog -Level "Info" -Message "Using existing certificate $($agwCert.Name) - $($CertObj.Subject)"
+            Write-Output "Using existing certificate $($agwCert.Name) - $($CertObj.Subject)"
             $BackendCertificate = $agwCert
         }   
     }
