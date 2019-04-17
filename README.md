@@ -6,5 +6,6 @@ No warranties - please use at your own risk - it works for me... :)
 
 - ```PKI``` Functions to manage certificates and keys in Azure 
 - ```ApplicationGateway``` Scripts to manage Azure Application Gateway (e.g. to add back-end endpoints and ports)
+- ```AzureAD``` Script to manage and collection Azure AD information (applications, privileges etc)
 
  
