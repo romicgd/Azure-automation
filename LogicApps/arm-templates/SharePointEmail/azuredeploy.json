@@ -26,7 +26,7 @@
         }
     },
     "variables": {
-        "sharepoint_tenant_url": "https://ontariogov.sharepoint.com/sites"
+        "sharepoint_tenant_url": "https://%your-sharepoint-online-tenant%/sites"
     },
     "resources": [
         {
