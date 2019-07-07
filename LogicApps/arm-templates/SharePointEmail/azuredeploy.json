@@ -1,0 +1,151 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_TestLogicApp_name": {
+            "defaultValue": "TestLogicApp",
+            "type": "String"
+        },
+        "sharepoint_site_name": {
+            "defaultValue": "SPO-TestTeamSite1",
+            "type": "String"
+        },
+        "sharepoint_folder_name": {
+            "defaultValue": "gdrtest05",
+            "type": "String"
+        },
+        "email_distribution_list": {
+            "defaultValue": "roman.guoussevdonskoi@gmail.com;roman.guoussev-donskoi@ontario.ca",
+            "type": "String"
+        },
+        "connections_office365_name": {
+            "type": "String"
+        },
+        "connections_sharepointonline_name": {
+            "type": "String"
+        }
+    },
+    "variables": {
+        "sharepoint_tenant_url": "https://ontariogov.sharepoint.com/sites"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2016-06-01",
+            "name": "[parameters('connections_sharepointonline_name')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "displayName": "[parameters('connections_sharepointonline_name')]",
+                "customParameterValues": {},
+                "api": {
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/sharepointonline')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2016-06-01",
+            "name": "[parameters('connections_office365_name')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "displayName": "[parameters('connections_office365_name')]",
+                "customParameterValues": {},
+                "api": {
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId,'/providers/Microsoft.Web/locations/', resourceGroup().location,'/managedApis/office365')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_TestLogicApp_name')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "When_a_file_is_created": {
+                            "recurrence": {
+                                "frequency": "Minute",
+                                "interval": 1
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "[concat('/datasets/@{encodeURIComponent(encodeURIComponent(''', variables('sharepoint_tenant_url'), '/', parameters('sharepoint_site_name'), '''))}/triggers/onnewfile')]",
+                                "queries": {
+                                    "folderId": "[concat('%252fShared%2bDocuments%252f', parameters('sharepoint_folder_name'))]"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Send_email": {
+                            "runAfter": {
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "body": {
+                                    "Body": "A new file, @{triggerOutputs()['headers']?['x-ms-file-name']}, was added. It's located at @{triggerOutputs()['headers']?['x-ms-file-path']}.",
+                                    "Subject": "New file added - @{triggerOutputs()['headers']?['x-ms-file-name']}",
+                                    "To": "[parameters('email_distribution_list')]"
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['office365']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/Mail"
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "office365": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_office365_name'))]",
+                                "connectionName": "office365",
+                                "id": "[reference(concat('Microsoft.Web/connections/', parameters('connections_office365_name')), '2016-06-01').api.id]"
+                            },
+                            "sharepointonline": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_sharepointonline_name'))]",
+                                "connectionName": "sharepointonline",
+                                "id": "[reference(concat('Microsoft.Web/connections/', parameters('connections_sharepointonline_name')), '2016-06-01').api.id]"
+                            }
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/connections', parameters('connections_office365_name'))]",
+                "[resourceId('Microsoft.Web/connections', parameters('connections_sharepointonline_name'))]"
+            ]
+        }
+    ],
+    "outputs" : {
+        "connections_office365_name": {
+            "type": "String",
+            "value": "[reference(concat('Microsoft.Web/connections/', parameters('connections_office365_name')), '2016-06-01').api.id]"
+        },
+        "connections_sharepointonline_name": {
+            "type": "String",
+            "value": "[reference(concat('Microsoft.Web/connections/', parameters('connections_sharepointonline_name')), '2016-06-01').api.id]"
+        }
+    }
+}
